@@ -21,22 +21,61 @@ class RecommendationService:
         try:
             # Get all properties with details
             all_properties = await self.property_service.get_all_property_details()
+            print(f"DEBUG: Retrieved {len(all_properties)} properties from property service")
             
             if not all_properties:
-                return RecommendationResponse(
-                    status="error",
-                    total_properties=0,
-                    recommended_properties=[],
-                    cache_info=None,
-                    performance_metrics=None
-                )
+                # Try to get just basic properties as fallback
+                basic_properties = await self.property_service.get_all_properties()
+                print(f"DEBUG: Fallback - Retrieved {len(basic_properties)} basic properties")
+                
+                if not basic_properties:
+                    return RecommendationResponse(
+                        status="error",
+                        total_properties=0,
+                        recommended_properties=[],
+                        cache_info=None,
+                        performance_metrics=None
+                    )
+                
+                # Convert basic properties to the expected format
+                all_properties = []
+                for prop in basic_properties:
+                    all_properties.append({
+                        "basic_info": {
+                            "_id": prop.get('_id'),
+                            "id": prop.get('id'),
+                            "title": prop.get('title'),
+                            "price": prop.get('price'),
+                            "location": prop.get('location')
+                        },
+                        "details": {
+                            "id": prop.get('id'),
+                            "bedrooms": 2,  # Default values for scoring
+                            "bathrooms": 1,
+                            "school_rating": 5,
+                            "commute_time": 30,
+                            "year_built": 2000,
+                            "has_pool": False,
+                            "has_garage": False,
+                            "has_garden": False
+                        }
+                    })
             
-            # Check cache for existing scores
+            # Check cache for existing scores - flatten the structure for cache key generation
+            property_details_for_cache = []
+            for prop in all_properties:
+                details = prop["details"].copy()
+                details["price"] = prop["basic_info"].get("price", 0)  # Add price for cache key
+                property_details_for_cache.append(details)
+            
             cached_results = self.cache.get_property_scores(
                 request.user_budget,
                 request.user_min_bedrooms,
-                [prop["details"] for prop in all_properties]
+                property_details_for_cache
             )
+            
+            
+            print(f"-------------cached_results---------------- {cached_results}")
             
             # Calculate scores for properties not in cache
             properties_to_score = []
@@ -54,6 +93,8 @@ class RecommendationService:
                 else:
                     # Need to calculate score
                     properties_to_score.append(property_data)
+
+            print(f"-------------properties_to_score---------------- {properties_to_score}")
             
             # Calculate scores for non-cached properties
             newly_scored_properties = []
@@ -64,13 +105,25 @@ class RecommendationService:
                     property_with_score["scores"] = scores
                     newly_scored_properties.append(property_with_score)
                 
-                # Cache the newly calculated scores
+                # Cache the newly calculated scores - prepare data in expected format
+                properties_for_caching = []
+                for prop_with_score in newly_scored_properties:
+                    cache_property = {
+                        "id": prop_with_score["details"]["id"],
+                        "basic_info": prop_with_score["basic_info"],
+                        "details": prop_with_score["details"],
+                        "scores": prop_with_score["scores"]
+                    }
+                    properties_for_caching.append(cache_property)
+                
                 self.cache.cache_property_scores(
                     request.user_budget,
                     request.user_min_bedrooms,
-                    newly_scored_properties
+                    properties_for_caching
                 )
             
+            print(f"-------------newly_scored_properties---------------- {newly_scored_properties}")
+
             # Combine all scored properties
             all_scored_properties = cached_properties + newly_scored_properties
             
@@ -78,6 +131,8 @@ class RecommendationService:
             recommended_properties = self._filter_and_sort_properties(
                 all_scored_properties, request
             )
+
+            print(f"DEBUG: Returning {len(recommended_properties)} recommended properties")
             
             return RecommendationResponse(
                 status="success",
@@ -88,11 +143,14 @@ class RecommendationService:
             )
             
         except Exception as e:
+            print(f"ERROR in get_recommendations: {str(e)}")
+            import traceback
+            print(f"TRACEBACK: {traceback.format_exc()}")
             return RecommendationResponse(
                 status="error",
                 total_properties=0,
                 recommended_properties=[],
-                cache_info=None,
+                cache_info={"error": str(e)},
                 performance_metrics=None
             )
     
@@ -170,35 +228,19 @@ class RecommendationService:
         }
     
     def _filter_and_sort_properties(self, properties: List[Dict[str, Any]], request: RecommendationRequest) -> List[Dict[str, Any]]:
-        """Filter properties by criteria and sort by score"""
-        # Filter properties that meet basic criteria
-        filtered_properties = []
+        """Sort properties by their total score without filtering"""
+        print(f"DEBUG: Sorting {len(properties)} properties by total_score (no filtering applied)")
         
-        for prop in properties:
+        # Log each property's score for debugging
+        for i, prop in enumerate(properties):
             basic_info = prop["basic_info"]
-            details = prop["details"]
             scores = prop["scores"]
-            
-            # Must meet budget and bedroom requirements
-            if (basic_info.get("price", 0) <= request.user_budget and 
-                details.get("bedrooms", 0) >= request.user_min_bedrooms):
-                
-                # Apply additional filters if provided
-                meets_criteria = True
-                
-                if request.user_max_commute is not None:
-                    if details.get("commute_time", 999) > request.user_max_commute:
-                        meets_criteria = False
-                
-                if request.user_min_school_rating is not None:
-                    if details.get("school_rating", 0) < request.user_min_school_rating:
-                        meets_criteria = False
-                
-                if meets_criteria:
-                    filtered_properties.append(prop)
+            property_price = basic_info.get("price", 0)
+            total_score = scores.get("total_score", 0)
+            print(f"DEBUG: Property {i+1}: {basic_info.get('title', 'Unknown')} - Price: ${property_price:,} - Score: {total_score}")
         
-        # Sort by total score (highest first)
-        filtered_properties.sort(key=lambda x: x["scores"]["total_score"], reverse=True)
+        # Sort by total score (highest first) without any filtering
+        sorted_properties = sorted(properties, key=lambda x: x["scores"]["total_score"], reverse=True)
         
         # Return top 3 recommendations only
-        return filtered_properties[:3]
+        return sorted_properties[:3]

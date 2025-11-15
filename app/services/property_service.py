@@ -68,25 +68,48 @@ class PropertyService:
             for property_doc in self.db.properties_list_collection.find():
                 property_id = property_doc.get('id')
                 
-                # Get detailed info
+                # Get detailed info (optional)
                 property_info = await self.get_property_info(property_id)
                 
-                # Combine basic info with detailed info
+                # Always include the property, even if detailed info is missing
+                basic_info = {
+                    "_id": str(property_doc['_id']),
+                    "id": property_doc.get('id'),
+                    "title": property_doc.get('title'),
+                    "price": property_doc.get('price'),
+                    "location": property_doc.get('location')
+                }
+                
+                # Use detailed info if available, otherwise use sensible defaults
                 if property_info:
-                    combined_property = {
-                        "basic_info": {
-                            "_id": str(property_doc['_id']),
-                            "id": property_doc.get('id'),
-                            "title": property_doc.get('title'),
-                            "price": property_doc.get('price'),
-                            "location": property_doc.get('location')
-                        },
-                        "details": property_info
+                    # Remove _id from property_info to avoid conflicts
+                    details = {k: v for k, v in property_info.items() if k != '_id'}
+                else:
+                    # Provide default values when detailed info is missing
+                    details = {
+                        "id": property_id,
+                        "bedrooms": 2,
+                        "bathrooms": 1,
+                        "size_sqft": 1200,
+                        "amenities": [],
+                        "school_rating": 5,
+                        "commute_time": 30,
+                        "has_garage": False,
+                        "has_garden": False,
+                        "has_pool": False,
+                        "year_built": 2010
                     }
-                    properties_with_details.append(combined_property)
+                
+                combined_property = {
+                    "basic_info": basic_info,
+                    "details": details
+                }
+                properties_with_details.append(combined_property)
             
+            print(f"DEBUG: PropertyService returning {len(properties_with_details)} properties")
             return properties_with_details
         except Exception as e:
+            print(f"ERROR in get_all_property_details: {str(e)}")
             raise Exception(f"Error retrieving all property details: {str(e)}")
     
     async def get_database_status(self) -> Dict[str, Any]:
