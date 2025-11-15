@@ -2,9 +2,6 @@
 Models package for the property management application
 """
 from .property_models import (
-    PropertyList, 
-    PropertyInfo, 
-    PropertyImage, 
     PredictionRequest, 
     PredictionResponse,
     RecommendationRequest,
@@ -15,9 +12,6 @@ from .property_models import (
 )
 
 __all__ = [
-    'PropertyList',
-    'PropertyInfo', 
-    'PropertyImage',
     'PredictionRequest',
     'PredictionResponse',
     'RecommendationRequest',

@@ -1,31 +1,8 @@
 """
-Database models using Pydantic for data validation
+API models using Pydantic for request/response validation
 """
 from pydantic import BaseModel
 from typing import List, Optional
-
-
-class PropertyList(BaseModel):
-    """Model for basic property listing information"""
-    id: int
-    title: str
-    price: int
-    location: str
-
-
-class PropertyInfo(BaseModel):
-    """Model for detailed property information"""
-    id: int
-    bedrooms: int
-    bathrooms: int
-    size_sqft: int
-    amenities: List[str]
-
-
-class PropertyImage(BaseModel):
-    """Model for property image information"""
-    id: int
-    image_url: str
 
 
 class PredictionRequest(BaseModel):

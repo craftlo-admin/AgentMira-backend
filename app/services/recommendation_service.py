@@ -131,9 +131,16 @@ class RecommendationService:
         }
     
     def _filter_and_sort_properties(self, properties: List[Dict[str, Any]], request: RecommendationRequest) -> List[Dict[str, Any]]:
-        """Sort properties by their total score without filtering"""
-        # Sort by total score (highest first) without any filtering
-        sorted_properties = sorted(properties, key=lambda x: x["scores"]["total_score"], reverse=True)
+        """Filter properties within budget and sort by score"""
+        # Filter: Only include properties within budget
+        within_budget = []
+        for prop in properties:
+            property_price = prop["basic_info"].get("price", 0)
+            if property_price <= request.user_budget:
+                within_budget.append(prop)
         
-        # Return top 3 recommendations only
+        # Sort by total score (highest first)
+        sorted_properties = sorted(within_budget, key=lambda x: x["scores"]["total_score"], reverse=True)
+        
+        # Return top 3 recommendations within budget
         return sorted_properties[:3]
