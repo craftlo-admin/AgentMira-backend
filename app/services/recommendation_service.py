@@ -27,7 +27,8 @@ class RecommendationService:
                     status="error",
                     total_properties=0,
                     recommended_properties=[],
-                    cache_info={"message": "No properties found in database"}
+                    cache_info=None,
+                    performance_metrics=None
                 )
             
             # Check cache for existing scores
@@ -78,26 +79,12 @@ class RecommendationService:
                 all_scored_properties, request
             )
             
-            # Prepare cache statistics
-            cache_stats = self.cache.get_stats()
-            cache_info = {
-                "cache_hits": len(cached_properties),
-                "cache_misses": len(newly_scored_properties),
-                "cache_hit_rate": f"{(len(cached_properties) / len(all_properties) * 100):.1f}%" if all_properties else "0%",
-                "cache_stats": cache_stats
-            }
-            
             return RecommendationResponse(
                 status="success",
-                total_properties=len(all_properties),
+                total_properties=len(recommended_properties),
                 recommended_properties=recommended_properties,
-                cache_info=cache_info,
-                performance_metrics={
-                    "total_properties_analyzed": len(all_properties),
-                    "properties_meeting_criteria": len(recommended_properties),
-                    "cached_results": len(cached_properties),
-                    "newly_calculated": len(newly_scored_properties)
-                }
+                cache_info=None,
+                performance_metrics=None
             )
             
         except Exception as e:
@@ -105,7 +92,8 @@ class RecommendationService:
                 status="error",
                 total_properties=0,
                 recommended_properties=[],
-                cache_info={"error": str(e)}
+                cache_info=None,
+                performance_metrics=None
             )
     
     async def _calculate_property_score(self, property_data: Dict[str, Any], request: RecommendationRequest) -> Dict[str, float]:
@@ -212,5 +200,5 @@ class RecommendationService:
         # Sort by total score (highest first)
         filtered_properties.sort(key=lambda x: x["scores"]["total_score"], reverse=True)
         
-        # Return top 10 recommendations
-        return filtered_properties[:10]
+        # Return top 3 recommendations only
+        return filtered_properties[:3]
