@@ -2,15 +2,17 @@ services:
   - type: web
     name: agentmira-backend
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install --only-binary=all -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
     plan: free
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.6
+        value: 3.11.9
       - key: PORT
         value: 10000
+      - key: PIP_NO_CACHE_DIR
+        value: "1"
     disk:
       name: agentmira-disk
       mountPath: /data
