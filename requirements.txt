@@ -1,19 +1,4 @@
-# Core FastAPI
-fastapi==0.104.1
-uvicorn==0.24.0
-
-# Database
-motor==3.3.2
-
-# Data Validation
-pydantic==2.5.0
-
-# Environment
-python-dotenv==1.0.0
-
-# Async and utilities
-aiofiles==23.2.1
-python-multipart==0.0.6
-
-# Basic math (instead of heavy ML libraries)
-# We'll handle the ML model as a pickle file without scikit-learn dependency
+# Absolute minimal for Render deployment
+# Test deployment first, add features later
+fastapi==0.85.0
+uvicorn==0.18.3

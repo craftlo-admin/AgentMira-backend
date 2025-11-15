@@ -1,0 +1,15 @@
+# Ultra-minimal requirements for Render deployment
+# No compilation needed, pure Python wheels only
+
+# Web framework
+fastapi==0.88.0
+uvicorn==0.20.0
+
+# Database
+pymongo==4.3.3
+
+# Validation
+pydantic==1.10.2
+
+# Environment
+python-dotenv==0.21.0
