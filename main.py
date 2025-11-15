@@ -14,12 +14,24 @@ import os
 # Add app directory to Python path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), 'app'))
 
-# Import MVC controllers
-from app.controllers.property_controller import PropertyController
-from app.controllers.prediction_controller import PredictionController
-from app.controllers.recommendation_controller import RecommendationController
-from app.controllers.admin_controller import AdminController
-from app.models.property_models import PredictionRequest, RecommendationRequest
+# Try to import MVC controllers (optional for deployment compatibility)
+try:
+    from app.controllers.property_controller import PropertyController
+    from app.controllers.prediction_controller import PredictionController
+    from app.controllers.recommendation_controller import RecommendationController
+    from app.controllers.admin_controller import AdminController
+    from app.models.property_models import PredictionRequest, RecommendationRequest
+    MVC_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ MVC Controllers not available: {e}")
+    print("📝 Using fallback implementations for Render deployment")
+    PropertyController = None
+    PredictionController = None
+    RecommendationController = None
+    AdminController = None
+    PredictionRequest = None
+    RecommendationRequest = None
+    MVC_AVAILABLE = False
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -39,26 +51,31 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-# Initialize MVC Controllers
-try:
-    property_controller = PropertyController()
-    prediction_controller = PredictionController()
-    recommendation_controller = RecommendationController()
-    admin_controller = AdminController()
-    
-    # Register all controller routers
-    app.include_router(property_controller.get_router())
-    app.include_router(prediction_controller.get_router())
-    app.include_router(recommendation_controller.get_router())
-    app.include_router(admin_controller.get_router())
-    
-    print("✅ MVC Controllers loaded successfully")
-    
-except ImportError as e:
-    print(f"⚠️ MVC Controllers not available: {e}")
-    print("📝 Using fallback simple implementations")
-    
-    # Fallback simple implementations will be defined below
+# Initialize MVC Controllers if available
+if MVC_AVAILABLE:
+    try:
+        property_controller = PropertyController()
+        prediction_controller = PredictionController()
+        recommendation_controller = RecommendationController()
+        admin_controller = AdminController()
+        
+        # Register all controller routers
+        app.include_router(property_controller.get_router())
+        app.include_router(prediction_controller.get_router())
+        app.include_router(recommendation_controller.get_router())
+        app.include_router(admin_controller.get_router())
+        
+        print("✅ MVC Controllers loaded successfully")
+        
+    except Exception as e:
+        print(f"⚠️ MVC Controllers failed to initialize: {e}")
+        print("📝 Using fallback simple implementations")
+        MVC_AVAILABLE = False
+        property_controller = None
+        prediction_controller = None
+        recommendation_controller = None
+        admin_controller = None
+else:
     property_controller = None
     prediction_controller = None
     recommendation_controller = None
@@ -173,11 +190,11 @@ SAMPLE_PROPERTIES = []
 def root():
     """API root endpoint with all available endpoints"""
     return {
-        "message": "Property Management API - MVC Controllers Active",
+        "message": "Property Management API - " + ("MVC Controllers Active" if MVC_AVAILABLE else "Fallback Mode"),
         "status": "running",
         "version": "2.0.0",
         "deployment": "render",
-        "architecture": "Full MVC Controllers Integration",
+        "architecture": "Full MVC Controllers Integration" if MVC_AVAILABLE else "Fallback Simple Implementation",
         "cors_enabled": True,
         "available_endpoints": {
             "properties": {
@@ -210,18 +227,19 @@ def root():
             }
         },
         "features": [
-            "✅ Complete Property Management via PropertyController",
-            "✅ ML Price Predictions via PredictionController", 
-            "✅ Smart Recommendations via RecommendationController",
-            "✅ Performance Monitoring via AdminController",
+            "✅ Property Management " + ("via PropertyController" if MVC_AVAILABLE else "via Fallback API"),
+            "✅ ML Price Predictions " + ("via PredictionController" if MVC_AVAILABLE else "via Simple Algorithm"), 
+            "✅ Smart Recommendations " + ("via RecommendationController" if MVC_AVAILABLE else "via Fallback Mode"),
+            "✅ Health Monitoring " + ("via AdminController" if MVC_AVAILABLE else "via Basic Health Check"),
             "✅ CORS Enabled for All Frontends",
-            "✅ MVC Architecture with Database Integration"
+            "✅ " + ("MVC Architecture with Database Integration" if MVC_AVAILABLE else "Render-Compatible Fallback Mode")
         ],
         "mvc_controllers": {
-            "PropertyController": "Active" if property_controller else "Not Available",
-            "PredictionController": "Active" if prediction_controller else "Not Available", 
-            "RecommendationController": "Active" if recommendation_controller else "Not Available",
-            "AdminController": "Active" if admin_controller else "Not Available"
+            "mvc_available": MVC_AVAILABLE,
+            "PropertyController": "Active" if property_controller else "Fallback Mode",
+            "PredictionController": "Active" if prediction_controller else "Fallback Mode", 
+            "RecommendationController": "Active" if recommendation_controller else "Fallback Mode",
+            "AdminController": "Active" if admin_controller else "Fallback Mode"
         },
         "sample_usage": {
             "get_properties": "GET /properties",
@@ -231,20 +249,76 @@ def root():
     }
 
 # ==================== FALLBACK ENDPOINTS (only if MVC controllers not available) ====================
-# Note: Property endpoints are now handled by PropertyController
-# ML Prediction endpoints are now handled by PredictionController  
-# Recommendation endpoints are now handled by RecommendationController
-# Admin endpoints are now handled by AdminController
 
-# These fallback endpoints will only be used if the MVC controllers fail to load
-
-# Prediction and Recommendation endpoints are now handled by their respective controllers
-
-# Recommendation endpoints are now handled by RecommendationController
-
-# ==================== ADMIN & MONITORING ENDPOINTS ====================
-
-# Admin endpoints (health, cache management) are now handled by AdminController
+# Only add fallback endpoints if MVC controllers are not available
+if not MVC_AVAILABLE:
+    print("📝 Adding fallback endpoints for Render deployment compatibility")
+    
+    # Sample properties for fallback
+    FALLBACK_PROPERTIES = []
+    
+    @app.get("/properties")
+    def fallback_get_properties():
+        """Fallback properties endpoint"""
+        return {
+            "status": "success",
+            "total_properties": 0,
+            "properties": FALLBACK_PROPERTIES,
+            "message": "Fallback mode - MVC controllers not available",
+            "note": "Connect to database to get real property data"
+        }
+    
+    @app.get("/properties/{property_id}")
+    def fallback_get_property_by_id(property_id: int):
+        """Fallback single property endpoint"""
+        raise HTTPException(
+            status_code=404, 
+            detail="Property not found - MVC controllers not available. Database connection needed."
+        )
+    
+    @app.post("/predict")
+    def fallback_predict_price(request: FallbackPredictionRequest):
+        """Fallback prediction endpoint"""
+        # Simple fallback prediction
+        base_price = 200000
+        predicted_price = (
+            base_price + 
+            request.bedrooms * 25000 + 
+            request.bathrooms * 15000 +
+            request.building_area * 150
+        )
+        
+        return {
+            "status": "success",
+            "predicted_price": predicted_price,
+            "input_data": request.dict(),
+            "message": "Fallback prediction - MVC controllers not available",
+            "note": "Connect ML service for advanced predictions"
+        }
+    
+    @app.post("/recommend") 
+    def fallback_get_recommendations(request: FallbackRecommendationRequest):
+        """Fallback recommendation endpoint"""
+        return {
+            "status": "success",
+            "total_properties_analyzed": 0,
+            "properties_meeting_criteria": 0,
+            "recommended_properties": [],
+            "message": "Fallback mode - MVC controllers not available", 
+            "note": "Connect to database and recommendation service for real recommendations"
+        }
+    
+    @app.get("/health")
+    def fallback_health_check():
+        """Fallback health check endpoint"""
+        return {
+            "status": "healthy",
+            "service": "property-management-api",
+            "version": "2.0.0",
+            "mode": "fallback",
+            "message": "API running in fallback mode - MVC controllers not available",
+            "timestamp": time.time()
+        }
 
 # ==================== TEST ENDPOINTS ====================
 
@@ -309,18 +383,21 @@ def cors_test():
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting Property Management API...")
-    print("📁 Architecture: Full MVC Controllers Integration")
-    print("🌐 CORS: Enabled for all frontends")
     
-    if property_controller:
+    if MVC_AVAILABLE:
+        print("📁 Architecture: Full MVC Controllers Integration")
         print("✅ PropertyController: Active (handles /properties endpoints)")
-    if prediction_controller:
-        print("✅ PredictionController: Active (handles /predict, /pricedata endpoints)")
-    if recommendation_controller:
+        print("✅ PredictionController: Active (handles /predict, /pricedata endpoints)")  
         print("✅ RecommendationController: Active (handles /recommend endpoint)")
-    if admin_controller:
         print("✅ AdminController: Active (handles /health, /cache endpoints)")
+    else:
+        print("📁 Architecture: Fallback Mode (Render Compatible)")
+        print("🔄 PropertyController: Fallback endpoints active")
+        print("🔄 PredictionController: Simple prediction available") 
+        print("🔄 RecommendationController: Basic recommendations available")
+        print("🔄 AdminController: Basic health check available")
     
+    print("🌐 CORS: Enabled for all frontends")
     print("🎯 Ready at: http://127.0.0.1:8000")
     print("📚 Docs: http://127.0.0.1:8000/docs")
     print("🔗 Properties: http://127.0.0.1:8000/properties")
