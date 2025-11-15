@@ -47,24 +47,7 @@ class SearchService:
                 
                 # Check preferences against property_info
                 if self._matches_preferences(property_info, request.preferences):
-                    # Combine basic info with detailed info for response
-                    combined_property = {
-                        **property_doc,
-                        "details": {
-                            "_id": str(property_info.get('_id')),
-                            "bedrooms": property_info.get('bedrooms', 0),
-                            "bathrooms": property_info.get('bathrooms', 0),
-                            "size_sqft": property_info.get('size_sqft', 0),
-                            "amenities": property_info.get('amenities', []),
-                            "school_rating": property_info.get('school_rating', 0),
-                            "commute_time": property_info.get('commute_time', 0),
-                            "has_garage": property_info.get('has_garage', False),
-                            "has_garden": property_info.get('has_garden', False),
-                            "has_pool": property_info.get('has_pool', False),
-                            "year_built": property_info.get('year_built', 0)
-                        }
-                    }
-                    matching_properties.append(combined_property)
+                    matching_properties.append(property_doc)
             
             return SearchResponse(
                 status="success",
@@ -110,53 +93,3 @@ class SearchService:
                     return False
         
         return True
-    
-    async def search_properties(self, query: str, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        """Search properties by query and filters"""
-        try:
-            # Basic search implementation
-            search_filter = {}
-            
-            if query:
-                # Simple text search in title and location
-                search_filter["$or"] = [
-                    {"title": {"$regex": query, "$options": "i"}},
-                    {"location": {"$regex": query, "$options": "i"}}
-                ]
-            
-            # Add additional filters if provided
-            if filters:
-                search_filter.update(filters)
-            
-            # Execute search using synchronous iteration
-            properties = []
-            for property_doc in self.db.properties_list_collection.find(search_filter):
-                property_doc['_id'] = str(property_doc['_id'])
-                properties.append(property_doc)
-            
-            return properties
-        except Exception as e:
-            raise Exception(f"Error searching properties: {str(e)}")
-    
-    async def get_search_suggestions(self, query: str) -> List[str]:
-        """Get search suggestions based on query"""
-        try:
-            suggestions = []
-            
-            # Get unique locations and titles for suggestions using synchronous calls
-            locations = self.db.properties_list_collection.distinct("location")
-            titles = self.db.properties_list_collection.distinct("title")
-            
-            # Filter suggestions based on query
-            query_lower = query.lower()
-            for location in locations:
-                if query_lower in location.lower():
-                    suggestions.append(location)
-            
-            for title in titles:
-                if query_lower in title.lower():
-                    suggestions.append(title)
-            
-            return list(set(suggestions))[:10]  # Return unique suggestions, max 10
-        except Exception as e:
-            raise Exception(f"Error getting search suggestions: {str(e)}")

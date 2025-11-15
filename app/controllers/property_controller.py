@@ -52,12 +52,18 @@ class PropertyController:
                     "images": images or [],
                 }
 
-                # Merge details if present, normalizing some common fields
+                # Add property details with defaults
+                details = {
+                    "bedrooms": 0, "bathrooms": 0, "size_sqft": 0, "amenities": [],
+                    "school_rating": 0, "commute_time": 0, "has_garage": False,
+                    "has_garden": False, "has_pool": False, "year_built": 0
+                }
+                
                 if property_info:
-                    combined.update({
-                        "bedrooms": property_info.get('bedrooms') if property_info.get('bedrooms') is not None else property_info.get('num_bedrooms', 0),
-                        "bathrooms": property_info.get('bathrooms') if property_info.get('bathrooms') is not None else property_info.get('baths', 0),
-                        "size_sqft": property_info.get('size_sqft') or property_info.get('area') or property_info.get('living_area') or 0,
+                    details.update({
+                        "bedrooms": property_info.get('bedrooms', 0),
+                        "bathrooms": property_info.get('bathrooms', 0),
+                        "size_sqft": property_info.get('size_sqft', 0),
                         "amenities": property_info.get('amenities', []),
                         "school_rating": property_info.get('school_rating', 0),
                         "commute_time": property_info.get('commute_time', 0),
@@ -66,20 +72,8 @@ class PropertyController:
                         "has_pool": property_info.get('has_pool', False),
                         "year_built": property_info.get('year_built', 0)
                     })
-                else:
-                    # Defaults when no detailed info
-                    combined.update({
-                        "bedrooms": 0,
-                        "bathrooms": 0,
-                        "size_sqft": 0,
-                        "amenities": [],
-                        "school_rating": 0,
-                        "commute_time": 0,
-                        "has_garage": False,
-                        "has_garden": False,
-                        "has_pool": False,
-                        "year_built": 0
-                    })
+                
+                combined.update(details)
 
                 return {
                     "status": "success",

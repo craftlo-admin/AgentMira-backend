@@ -1,11 +1,7 @@
 """
 Prediction service for handling ML model operations
 """
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-
-from typing import Dict, Any, List
+from typing import Dict, Any
 from app.utils.model_handler import model_handler
 from app.models.property_models import PredictionRequest, PredictionResponse
 
@@ -54,36 +50,4 @@ class PredictionService:
             'has_pool': request.has_pool,
             'has_garage': request.has_garage,
             'school_rating': request.school_rating
-        }
-    
-    def get_model_data(self) -> Dict[str, Any]:
-        """Get model information and sample data"""
-        try:
-            if not self.model_handler.is_loaded:
-                return {"status": "error", "message": "Model not loaded"}
-            
-            sample_input = self._get_sample_input()
-            sample_prediction = self.predict_price(PredictionRequest(**sample_input))
-            
-            return {
-                "status": "success",
-                "sample_input": sample_input,
-                "sample_prediction": sample_prediction.dict()
-            }
-            
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
-    
-    def _get_sample_input(self) -> Dict[str, Any]:
-        """Get sample input data for demonstration"""
-        return {
-            "property_type": "SFH",
-            "lot_area": 5000.0,
-            "building_area": 1500.0,
-            "bedrooms": 3,
-            "bathrooms": 2,
-            "year_built": 2015,
-            "has_pool": False,
-            "has_garage": True,
-            "school_rating": 7
         }

@@ -3,7 +3,6 @@ Property service for handling basic property operations
 """
 from typing import List, Dict, Any, Optional
 from app.config.database_config import db_config
-from app.models.property_models import PropertyList, PropertyInfo, PropertyImage
 
 
 class PropertyService:
@@ -80,25 +79,21 @@ class PropertyService:
                     "location": property_doc.get('location')
                 }
                 
-                # Use detailed info if available, otherwise use sensible defaults
+                # Use detailed info if available, otherwise use defaults
+                details = {}
                 if property_info:
-                    # Remove _id from property_info to avoid conflicts
                     details = {k: v for k, v in property_info.items() if k != '_id'}
-                else:
-                    # Provide default values when detailed info is missing
-                    details = {
-                        "id": property_id,
-                        "bedrooms": 2,
-                        "bathrooms": 1,
-                        "size_sqft": 1200,
-                        "amenities": [],
-                        "school_rating": 5,
-                        "commute_time": 30,
-                        "has_garage": False,
-                        "has_garden": False,
-                        "has_pool": False,
-                        "year_built": 2010
-                    }
+                
+                # Set defaults for missing fields
+                defaults = {
+                    "id": property_id, "bedrooms": 2, "bathrooms": 1, "size_sqft": 1200,
+                    "amenities": [], "school_rating": 5, "commute_time": 30,
+                    "has_garage": False, "has_garden": False, "has_pool": False, "year_built": 2010
+                }
+                
+                for key, default_value in defaults.items():
+                    if key not in details:
+                        details[key] = default_value
                 
                 combined_property = {
                     "basic_info": basic_info,
@@ -106,22 +101,6 @@ class PropertyService:
                 }
                 properties_with_details.append(combined_property)
             
-            print(f"DEBUG: PropertyService returning {len(properties_with_details)} properties")
             return properties_with_details
         except Exception as e:
-            print(f"ERROR in get_all_property_details: {str(e)}")
             raise Exception(f"Error retrieving all property details: {str(e)}")
-    
-    async def get_database_status(self) -> Dict[str, Any]:
-        """Get database connection status and collection counts"""
-        try:
-            is_connected = await self.db.ping_database()
-            collection_counts = await self.db.get_collection_counts() if is_connected else {}
-            
-            return {
-                "database_connected": is_connected,
-                "collections": collection_counts,
-                "database_name": self.db.database_name
-            }
-        except Exception as e:
-            raise Exception(f"Error checking database status: {str(e)}")

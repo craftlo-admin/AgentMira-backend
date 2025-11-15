@@ -21,8 +21,7 @@ class PredictionController:
         async def predict_price(request: PredictionRequest):
             """Predict property price using ML model"""
             try:
-                prediction_result = self.prediction_service.predict_price(request)
-                return prediction_result
+                return self.prediction_service.predict_price(request)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
     

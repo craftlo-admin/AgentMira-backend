@@ -19,20 +19,11 @@ class SearchController:
         
         @self.router.post("/findproperties", response_model=SearchResponse)
         async def find_properties(request: SearchRequest):
-            """
-            Find properties based on location, budget, and preferences
-            
-            - **location**: Location to search for properties  
-            - **budget**: Maximum budget (properties with price <= budget)
-            - **preferences**: Property preferences (bedrooms, bathrooms, size, amenities)
-            """
+            """Find properties based on location, budget, and preferences"""
             try:
-                # Call the search service to find matching properties
-                result = await self.search_service.find_properties(request)
-                return result
-                
+                return await self.search_service.find_properties(request)
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Error finding properties: {str(e)}")
+                raise HTTPException(status_code=500, detail=str(e))
     
     def get_router(self) -> APIRouter:
         """Return the configured router"""
