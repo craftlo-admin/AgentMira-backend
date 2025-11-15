@@ -4,9 +4,17 @@ FastAPI application with MVC architecture
 """
 import sys
 import os
+from pathlib import Path
 
 # Add the current directory to Python path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    print("python-dotenv not installed, using system environment variables")
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,9 +37,10 @@ app = FastAPI(
 )
 
 # Configure CORS middleware
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure as needed for production
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -113,9 +122,41 @@ async def startup_event():
     else:
         print("⚠️  ML model not loaded")
     
-    print("🎯 API ready at http://127.0.0.1:8000")
-    print("📚 Documentation available at http://127.0.0.1:8000/docs")
+    port = os.getenv("PORT", "8000")
+    host = os.getenv("API_HOST", "127.0.0.1")
+    print(f"🎯 API ready at http://{host}:{port}")
+    print(f"📚 Documentation available at http://{host}:{port}/docs")
+
+# Health check endpoint for deployment
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for deployment platforms"""
+    try:
+        db_status = await db_config.ping_database()
+        return {
+            "status": "healthy",
+            "database": "connected" if db_status else "disconnected", 
+            "model": "loaded" if model_handler.is_loaded else "not_loaded",
+            "version": "2.0.0",
+            "architecture": "MVC"
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "version": "2.0.0"
+        }
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    host = os.getenv("API_HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "8000"))
+    debug = os.getenv("DEBUG_MODE", "False").lower() == "true"
+    
+    uvicorn.run(
+        app, 
+        host=host, 
+        port=port,
+        reload=debug,
+        log_level="info"
+    )
