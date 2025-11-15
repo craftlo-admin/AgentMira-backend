@@ -1,5 +1,8 @@
 # ABSOLUTE MINIMAL - No compilation dependencies
 # Only pure Python wheels, no optional dependencies
 
-fastapi
-uvicorn
+fastapi>=0.88.0
+uvicorn>=0.20.0
+pymongo>=4.3.3
+pydantic>=1.10.0
+python-dotenv>=0.21.0
