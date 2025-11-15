@@ -3,53 +3,35 @@ Search controller for property search operations
 """
 from fastapi import APIRouter, HTTPException
 from app.services.search_service import SearchService
-from app.models.search_models import FindPropertiesRequest, FindPropertiesResponse
-import logging
-
-logger = logging.getLogger(__name__)
+from app.models.property_models import SearchRequest, SearchResponse
 
 
 class SearchController:
     """Controller class for property search operations"""
     
     def __init__(self):
-        self.service = SearchService()
-        self.router = APIRouter()
+        self.search_service = SearchService()
+        self.router = APIRouter(tags=["search"])
         self._setup_routes()
     
     def _setup_routes(self):
         """Setup all search-related routes"""
         
-        @self.router.post("/findproperties", response_model=FindPropertiesResponse)
-        async def find_properties(request: FindPropertiesRequest):
+        @self.router.post("/findproperties", response_model=SearchResponse)
+        async def find_properties(request: SearchRequest):
             """
             Find properties based on location, budget, and preferences
             
-            - **location**: Location to search for properties
+            - **location**: Location to search for properties  
             - **budget**: Maximum budget (properties with price <= budget)
-            - **preferences**: Property preferences (bedrooms, bathrooms minimum requirements)
+            - **preferences**: Property preferences (bedrooms, bathrooms, size, amenities)
             """
             try:
-                logger.info(f"Finding properties for location: {request.location}, budget: {request.budget}")
-                
                 # Call the search service to find matching properties
-                result = await self.service.find_properties(
-                    location=request.location,
-                    max_budget=request.budget,
-                    min_bedrooms=request.preferences.bedrooms,
-                    min_bathrooms=request.preferences.bathrooms
-                )
-                
-                return FindPropertiesResponse(
-                    status="success",
-                    total_found=len(result["properties"]),
-                    properties=result["properties"],
-                    search_criteria=result["search_criteria"],
-                    message=result.get("message", "Properties found successfully")
-                )
+                result = await self.search_service.find_properties(request)
+                return result
                 
             except Exception as e:
-                logger.error(f"Error finding properties: {str(e)}")
                 raise HTTPException(status_code=500, detail=f"Error finding properties: {str(e)}")
     
     def get_router(self) -> APIRouter:

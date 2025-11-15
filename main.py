@@ -16,8 +16,8 @@ try:
     from app.controllers.property_controller import PropertyController
     from app.controllers.prediction_controller import PredictionController
     from app.controllers.recommendation_controller import RecommendationController
-    from app.controllers.admin_controller import AdminController
     from app.controllers.compare_controller import CompareController
+    from app.controllers.search_controller import SearchController
     from app.models.property_models import PredictionRequest, RecommendationRequest
     MVC_AVAILABLE = True
 except ImportError as e:
@@ -26,8 +26,8 @@ except ImportError as e:
     PropertyController = None
     PredictionController = None
     RecommendationController = None
-    AdminController = None
     CompareController = None
+    SearchController = None
     PredictionRequest = None
     RecommendationRequest = None
     MVC_AVAILABLE = False
@@ -56,15 +56,15 @@ if MVC_AVAILABLE:
         property_controller = PropertyController()
         prediction_controller = PredictionController()
         recommendation_controller = RecommendationController()
-        admin_controller = AdminController()
         compare_controller = CompareController()
+        search_controller = SearchController()
         
         # Register all controller routers
         app.include_router(property_controller.get_router())
         app.include_router(prediction_controller.get_router())
         app.include_router(recommendation_controller.get_router())
-        app.include_router(admin_controller.get_router())
         app.include_router(compare_controller.get_router())
+        app.include_router(search_controller.get_router())
         
         print("✅ MVC Controllers loaded successfully")
         
@@ -75,14 +75,14 @@ if MVC_AVAILABLE:
         property_controller = None
         prediction_controller = None
         recommendation_controller = None
-        admin_controller = None
         compare_controller = None
+        search_controller = None
 else:
     property_controller = None
     prediction_controller = None
     recommendation_controller = None
-    admin_controller = None
     compare_controller = None
+    search_controller = None
 
 # ==================== SIMPLE MODELS FOR DEPLOYMENT ====================
 
@@ -103,27 +103,19 @@ def root():
         "available_endpoints": {
             "properties": {
                 "GET /properties": "List all properties",
-                "GET /properties/{id}": "Get specific property details",
-                "GET /properties/{id}/info": "Get detailed property information", 
-                "GET /properties/{id}/images": "Get property images",
-                "GET /properties/details/all": "All properties with full details"
+                "GET /properties/{id}": "Get specific property with complete details"
             },
             "ml_prediction": {
-                "POST /predict": "ML-based price prediction",
-                "GET /pricedata": "Model information and sample data"
+                "POST /predict": "ML-based price prediction"
             },
             "recommendations": {
                 "POST /recommend": "Smart property recommendations"
             },
             "comparison": {
-                "POST /comparebyid": "Compare two properties by ID",
-                "GET /compare/stats": "Get comparison statistics and features"
+                "POST /comparebyid": "Compare two properties by ID"
             },
-            "admin": {
-                "GET /health": "System health check",
-                "GET /cache/stats": "Cache performance statistics",
-                "POST /cache/clear": "Clear all cached data",
-                "POST /cache/cleanup": "Clean expired cache entries"
+            "search": {
+                "POST /findproperties": "Advanced property search with filters"
             },
             "documentation": {
                 "GET /docs": "Interactive API documentation (Swagger UI)",
@@ -135,7 +127,7 @@ def root():
             "✅ ML Price Predictions " + ("via PredictionController" if MVC_AVAILABLE else "❌ Not Available"), 
             "✅ Smart Recommendations " + ("via RecommendationController" if MVC_AVAILABLE else "❌ Not Available"),
             "✅ Property Comparison " + ("via CompareController" if MVC_AVAILABLE else "❌ Not Available"),
-            "✅ Health Monitoring " + ("via AdminController" if MVC_AVAILABLE else "❌ Not Available"),
+            "✅ Advanced Property Search " + ("via SearchController" if MVC_AVAILABLE else "❌ Not Available"),
             "✅ CORS Enabled for All Frontends",
             "✅ " + ("MVC Architecture with Database Integration" if MVC_AVAILABLE else "Requires MVC Controllers")
         ],
@@ -145,7 +137,7 @@ def root():
             "PredictionController": "Active" if prediction_controller else "Not Available", 
             "RecommendationController": "Active" if recommendation_controller else "Not Available",
             "CompareController": "Active" if compare_controller else "Not Available",
-            "AdminController": "Active" if admin_controller else "Not Available"
+            "SearchController": "Active" if search_controller else "Not Available"
         },
         "sample_usage": {
             "get_properties": "GET /properties",
@@ -167,7 +159,7 @@ if __name__ == "__main__":
         print("✅ PredictionController: Active (handles /predict, /pricedata endpoints)")  
         print("✅ RecommendationController: Active (handles /recommend endpoint)")
         print("✅ CompareController: Active (handles /comparebyid endpoint)")
-        print("✅ AdminController: Active (handles /health, /cache endpoints)")
+        print("✅ SearchController: Active (handles /findproperties endpoint)")
     else:
         print("❌ MVC Controllers not available - API will not function properly")
         print("� Please ensure app/ directory structure is correct")

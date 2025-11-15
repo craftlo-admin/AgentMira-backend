@@ -25,15 +25,6 @@ class PredictionController:
                 return prediction_result
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
-        
-        @self.router.get("/pricedata")
-        async def get_model_data():
-            """Get model information and sample prediction data"""
-            try:
-                model_data = self.prediction_service.get_model_data()
-                return model_data
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
     
     def get_router(self) -> APIRouter:
         """Get the FastAPI router for this controller"""

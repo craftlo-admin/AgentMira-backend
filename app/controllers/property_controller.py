@@ -89,41 +89,6 @@ class PropertyController:
                 raise
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
-        
-        @self.router.get("/properties/{property_id}/info")
-        async def get_property_info(property_id: int):
-            """Get detailed property information"""
-            try:
-                property_info = await self.property_service.get_property_info(property_id)
-                if not property_info:
-                    raise HTTPException(status_code=404, detail="Property info not found")
-                return property_info
-            except HTTPException:
-                raise
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
-        
-        @self.router.get("/properties/{property_id}/images")
-        async def get_property_images(property_id: int):
-            """Get property images"""
-            try:
-                images = await self.property_service.get_property_images(property_id)
-                return images
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
-        
-        @self.router.get("/properties/details/all")
-        async def get_all_property_details():
-            """Get all properties with their detailed information"""
-            try:
-                properties_with_details = await self.property_service.get_all_property_details()
-                return {
-                    "status": "success",
-                    "total_properties": len(properties_with_details),
-                    "properties": properties_with_details
-                }
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
     
     def get_router(self) -> APIRouter:
         """Get the FastAPI router for this controller"""

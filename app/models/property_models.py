@@ -64,3 +64,25 @@ class RecommendationResponse(BaseModel):
     recommended_properties: List[dict]
     cache_info: Optional[dict] = None
     performance_metrics: Optional[dict] = None
+
+
+class SearchPreferences(BaseModel):
+    """Model for search preferences"""
+    bedrooms: Optional[int] = None
+    bathrooms: Optional[int] = None
+    min_size_sqft: Optional[int] = None
+    amenities: Optional[List[str]] = None
+
+
+class SearchRequest(BaseModel):
+    """Model for property search requests"""
+    location: str
+    budget: int
+    preferences: Optional[SearchPreferences] = None
+
+
+class SearchResponse(BaseModel):
+    """Model for property search responses"""
+    status: str
+    total_properties: int
+    properties: List[dict]

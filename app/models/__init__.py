@@ -8,7 +8,10 @@ from .property_models import (
     PredictionRequest, 
     PredictionResponse,
     RecommendationRequest,
-    RecommendationResponse
+    RecommendationResponse,
+    SearchPreferences,
+    SearchRequest,
+    SearchResponse
 )
 
 __all__ = [
@@ -18,5 +21,8 @@ __all__ = [
     'PredictionRequest',
     'PredictionResponse',
     'RecommendationRequest',
-    'RecommendationResponse'
+    'RecommendationResponse',
+    'SearchPreferences',
+    'SearchRequest',
+    'SearchResponse'
 ]

@@ -34,18 +34,6 @@ class CompareController:
                 return comparison_result
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
-        
-        @self.router.get("/compare/stats")
-        async def get_comparison_stats():
-            """Get comparison statistics and available features"""
-            try:
-                stats = await self.compare_service.get_comparison_stats()
-                return {
-                    "status": "success",
-                    "stats": stats
-                }
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
     
     def get_router(self) -> APIRouter:
         """Get the FastAPI router for this controller"""
