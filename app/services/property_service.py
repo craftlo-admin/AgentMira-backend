@@ -16,7 +16,8 @@ class PropertyService:
         """Retrieve all properties from the database"""
         try:
             properties = []
-            async for property_doc in self.db.properties_list_collection.find():
+            # Use synchronous iteration since we're using pymongo (not motor)
+            for property_doc in self.db.properties_list_collection.find():
                 # Convert ObjectId to string for JSON serialization
                 property_doc['_id'] = str(property_doc['_id'])
                 properties.append(property_doc)
@@ -27,7 +28,8 @@ class PropertyService:
     async def get_property_by_id(self, property_id: int) -> Optional[Dict[str, Any]]:
         """Retrieve a specific property by ID"""
         try:
-            property_doc = await self.db.properties_list_collection.find_one({"id": property_id})
+            # Use synchronous call since we're using pymongo (not motor)
+            property_doc = self.db.properties_list_collection.find_one({"id": property_id})
             if property_doc:
                 property_doc['_id'] = str(property_doc['_id'])
             return property_doc
@@ -37,7 +39,8 @@ class PropertyService:
     async def get_property_info(self, property_id: int) -> Optional[Dict[str, Any]]:
         """Retrieve detailed property information"""
         try:
-            property_info = await self.db.properties_info_collection.find_one({"id": property_id})
+            # Use synchronous call since we're using pymongo (not motor)
+            property_info = self.db.properties_info_collection.find_one({"id": property_id})
             if property_info:
                 property_info['_id'] = str(property_info['_id'])
             return property_info
@@ -48,7 +51,8 @@ class PropertyService:
         """Retrieve property images"""
         try:
             images = []
-            async for image_doc in self.db.properties_images_collection.find({"id": property_id}):
+            # Use synchronous iteration since we're using pymongo (not motor)
+            for image_doc in self.db.properties_images_collection.find({"id": property_id}):
                 image_doc['_id'] = str(image_doc['_id'])
                 images.append(image_doc)
             return images
@@ -60,8 +64,8 @@ class PropertyService:
         try:
             properties_with_details = []
             
-            # Get all basic property info
-            async for property_doc in self.db.properties_list_collection.find():
+            # Get all basic property info using synchronous iteration
+            for property_doc in self.db.properties_list_collection.find():
                 property_id = property_doc.get('id')
                 
                 # Get detailed info

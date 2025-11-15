@@ -65,3 +65,17 @@ class RecommendationResponse(BaseModel):
     recommended_properties: List[dict]
     cache_info: Optional[dict] = None
     performance_metrics: Optional[dict] = None
+
+
+class CompareRequest(BaseModel):
+    """Model for property comparison requests"""
+    id1: int
+    id2: int
+
+
+class CompareResponse(BaseModel):
+    """Model for property comparison responses"""
+    status: str
+    property1: Optional[dict] = None
+    property2: Optional[dict] = None
+    comparison_summary: Optional[dict] = None
