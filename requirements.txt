@@ -1,4 +1,5 @@
-# Absolute minimal for Render deployment
-# Test deployment first, add features later
-fastapi==0.85.0
-uvicorn==0.18.3
+# ABSOLUTE MINIMAL - No compilation dependencies
+# Only pure Python wheels, no optional dependencies
+
+fastapi
+uvicorn
