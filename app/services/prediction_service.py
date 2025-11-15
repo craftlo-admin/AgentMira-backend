@@ -29,22 +29,17 @@ class PredictionService:
             prediction = self.model_handler.predict(model_input)
             predicted_price = float(prediction[0]) if isinstance(prediction, list) else float(prediction)
             
-            # Get model information
-            model_info = self.model_handler.get_model_info()
-            
             return PredictionResponse(
                 status="success",
                 predicted_price=predicted_price,
-                input_data=request_data.dict(),
-                model_info=model_info
+                input_data=request_data.dict()
             )
             
         except Exception as e:
             return PredictionResponse(
                 status="error",
                 predicted_price=0.0,
-                input_data=request_data.dict(),
-                model_info={"error": str(e)}
+                input_data=request_data.dict()
             )
     
     def _prepare_model_input(self, request: PredictionRequest) -> Dict[str, Any]:
@@ -67,13 +62,11 @@ class PredictionService:
             if not self.model_handler.is_loaded:
                 return {"status": "error", "message": "Model not loaded"}
             
-            model_info = self.model_handler.get_model_info()
             sample_input = self._get_sample_input()
             sample_prediction = self.predict_price(PredictionRequest(**sample_input))
             
             return {
                 "status": "success",
-                "model_info": model_info,
                 "sample_input": sample_input,
                 "sample_prediction": sample_prediction.dict()
             }
